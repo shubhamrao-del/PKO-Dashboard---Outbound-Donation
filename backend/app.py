@@ -23,10 +23,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
+ADMIN_PASSWORD = "1234"
 class AddSheetRequest(BaseModel):
     url: str
     label: Optional[str] = None
+    password: str
 
 class SetTabRequest(BaseModel):
     tab_name: str
@@ -40,6 +41,8 @@ def get_sheets():
 @app.post("/api/sheets")
 def add_sheet(req: AddSheetRequest):
     """Add a new Google Sheet URL to the repository."""
+    if req.password != ADMIN_PASSWORD:
+        raise HTTPException(status_code=403, detail="Galat password! Sirf admin hi naya sheet add kar sakta hai.")
     try:
         sheet = repository.add_sheet(req.url, req.label)
         return {"success": True, "sheet": sheet}

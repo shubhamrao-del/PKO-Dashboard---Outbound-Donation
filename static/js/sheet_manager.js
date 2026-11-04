@@ -175,6 +175,7 @@ async function handleAddSheetSubmit(e) {
   const labelInput = document.getElementById('newSheetLabel');
   const statusDiv = document.getElementById('addSheetStatus');
   const submitBtn = document.getElementById('addSheetBtn');
+  const passwordInput = document.getElementById('adminPassword');
 
   const url = urlInput.value.trim();
   const label = labelInput.value.trim();
@@ -198,7 +199,7 @@ async function handleAddSheetSubmit(e) {
     const res = await fetch('/api/sheets', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url, label })
+      body: JSON.stringify({ url, label, password})
     });
 
     const data = await res.json();
