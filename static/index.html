@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calling Analytics & Operations Hub</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="/css/style.css">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eff6ff',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8'
+            }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-[#0b0f19] text-gray-100 min-h-screen flex flex-col antialiased">
+
+  <!-- Top Glass Navigation -->
+  <header class="glass-nav sticky top-0 z-40 px-4 lg:px-8 py-3.5">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      
+      <!-- Brand & Project Info -->
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-cyan-400 flex items-center justify-center shadow-lg shadow-blue-500/20">
+          <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+          </svg>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-lg font-bold tracking-tight text-white">Calling Operations Hub</h1>
+            <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/20">
+              Multi-Sheet Engine
+            </span>
+          </div>
+          <p class="text-xs text-gray-400">POC Performance, Call Status, Gender Demographics & Date Tracking</p>
+        </div>
+      </div>
+
+      <!-- Sheet & Tab Selectors + Action Buttons -->
+      <div class="flex items-center gap-2.5 flex-wrap">
+        
+        <!-- Sheet Selector Dropdown -->
+        <div class="relative">
+          <select id="sheetSelect" class="bg-gray-800/90 border border-gray-700 hover:border-gray-600 rounded-lg px-3 py-2 text-xs font-medium text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 max-w-[280px] truncate shadow-sm">
+            <option value="all">📊 Loading Sheets...</option>
+          </select>
+        </div>
+
+        <!-- Working Tab Indicator & Switcher -->
+        <div id="tabSelectContainer" class="hidden relative flex items-center gap-1.5">
+          <select id="tabSelect" class="bg-gray-800/90 border border-emerald-500/30 hover:border-emerald-500/50 rounded-lg px-3 py-2 text-xs font-medium text-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 max-w-[240px] truncate shadow-sm">
+          </select>
+        </div>
+
+        <!-- Repository / Add Sheet Modal Button -->
+        <button onclick="openRepositoryModal()" class="px-3.5 py-2 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-semibold flex items-center gap-2 shadow-md shadow-blue-500/20 transition">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+          </svg>
+          Sheet Repository
+          <span id="repoCountBadge" class="bg-blue-900/60 text-blue-200 px-1.5 py-0.5 rounded-full text-[10px]">2</span>
+        </button>
+
+        <!-- Live Refresh Button -->
+        <button id="refreshAllBtn" title="Sync live data from Google Sheets" class="p-2 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white border border-gray-700 transition">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+          </svg>
+        </button>
+
+      </div>
+
+    </div>
+  </header>
+
+  <!-- Main Content Container -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 lg:px-8 py-6 space-y-6">
+
+    <!-- Active Tab Banner (Displays auto-detection status) -->
+    <div id="detectedTabBadge" class="flex items-center justify-between flex-wrap gap-2">
+      <!-- Injected dynamically -->
+    </div>
+
+    <!-- Filter Control Panel -->
+    <section class="glass-panel rounded-2xl p-4 card-glow">
+      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        
+        <!-- Filter Controls -->
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 flex-1">
+          
+          <!-- POC Filter -->
+          <div>
+            <label class="block text-[11px] font-medium text-gray-400 mb-1">POC / Caller</label>
+            <select id="pocFilter" class="w-full bg-gray-800/80 border border-gray-700 rounded-lg px-2.5 py-1.5 text-xs text-gray-100 focus:outline-none focus:border-blue-500">
+              <option value="all">All POCs</option>
+            </select>
+          </div>
+
+          <!-- Status Filter -->
+          <div>
+            <label class="block text-[11px] font-medium text-gray-400 mb-1">Calling Status</label>
+            <select id="statusFilter" class="w-full bg-gray-800/80 border border-gray-700 rounded-lg px-2.5 py-1.5 text-xs text-gray-100 focus:outline-none focus:border-blue-500">
+              <option value="all">All Statuses</option>
+              <option value="answered">Answered Only</option>
+              <option value="not answered">Unanswered / Drop</option>
+            </select>
+          </div>
+
+          <!-- Gender Filter -->
+          <div>
+            <label class="block text-[11px] font-medium text-gray-400 mb-1">Gender</label>
+            <select id="genderFilter" class="w-full bg-gray-800/80 border border-gray-700 rounded-lg px-2.5 py-1.5 text-xs text-gray-100 focus:outline-none focus:border-blue-500">
+              <option value="all">All Genders</option>
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+              <option value="not specified">Not Specified</option>
+            </select>
+          </div>
+
+          <!-- Date From -->
+          <div>
+            <label class="block text-[11px] font-medium text-gray-400 mb-1">From Date</label>
+            <input type="date" id="dateFrom" class="w-full bg-gray-800/80 border border-gray-700 rounded-lg px-2.5 py-1.5 text-xs text-gray-100 focus:outline-none focus:border-blue-500">
+          </div>
+
+          <!-- Date To -->
+          <div>
+            <label class="block text-[11px] font-medium text-gray-400 mb-1">To Date</label>
+            <input type="date" id="dateTo" class="w-full bg-gray-800/80 border border-gray-700 rounded-lg px-2.5 py-1.5 text-xs text-gray-100 focus:outline-none focus:border-blue-500">
+          </div>
+
+        </div>
+
+        <!-- Search & Actions -->
+        <div class="flex items-center gap-2">
+          <div class="relative flex-1 sm:w-60">
+            <input type="text" id="searchInput" placeholder="Search name, phone, district..." class="w-full bg-gray-800/80 border border-gray-700 rounded-lg pl-8 pr-3 py-1.5 text-xs text-gray-100 placeholder-gray-500 focus:outline-none focus:border-blue-500">
+            <svg class="w-4 h-4 text-gray-500 absolute left-2.5 top-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+          </div>
+
+          <button id="resetFiltersBtn" class="px-3 py-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs font-medium border border-gray-700 transition whitespace-nowrap">
+            Reset
+          </button>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Top KPI Cards Grid -->
+    <section class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+      
+      <!-- Card 1: Total Calls -->
+      <div class="glass-panel p-4 rounded-xl card-glow border-l-4 border-l-blue-500">
+        <div class="flex items-center justify-between text-gray-400 text-xs mb-1">
+          <span>Total Calls</span>
+          <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+        </div>
+        <div id="kpiTotalCalls" class="text-2xl font-bold text-white tracking-tight">0</div>
+        <div class="mt-1 text-[11px] text-gray-400">Total Outbound Records</div>
+      </div>
+
+      <!-- Card 2: Calls Answered -->
+      <div class="glass-panel p-4 rounded-xl card-glow border-l-4 border-l-emerald-500">
+        <div class="flex items-center justify-between text-gray-400 text-xs mb-1">
+          <span>Answered Calls</span>
+          <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </div>
+        <div id="kpiAnswered" class="text-2xl font-bold text-emerald-400 tracking-tight">0</div>
+        <div id="kpiAnswerRate" class="mt-1 text-[11px] text-emerald-400/90 font-medium">0% Answer Rate</div>
+      </div>
+
+      <!-- Card 3: Calls Not Answered -->
+      <div class="glass-panel p-4 rounded-xl card-glow border-l-4 border-l-rose-500">
+        <div class="flex items-center justify-between text-gray-400 text-xs mb-1">
+          <span>Not Answered</span>
+          <svg class="w-4 h-4 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </div>
+        <div id="kpiNotAnswered" class="text-2xl font-bold text-rose-400 tracking-tight">0</div>
+        <div id="kpiDropRate" class="mt-1 text-[11px] text-rose-400/90 font-medium">0% Unanswered</div>
+      </div>
+
+      <!-- Card 4: Male Count -->
+      <div class="glass-panel p-4 rounded-xl card-glow border-l-4 border-l-blue-400">
+        <div class="flex items-center justify-between text-gray-400 text-xs mb-1">
+          <span>Male Calls</span>
+          <span class="text-blue-400 font-bold text-xs">M</span>
+        </div>
+        <div id="kpiMaleCount" class="text-2xl font-bold text-blue-300 tracking-tight">0</div>
+        <div class="mt-1 text-[11px] text-gray-400">Total Male Callers</div>
+      </div>
+
+      <!-- Card 5: Female Count -->
+      <div class="glass-panel p-4 rounded-xl card-glow border-l-4 border-l-pink-500">
+        <div class="flex items-center justify-between text-gray-400 text-xs mb-1">
+          <span>Female Calls</span>
+          <span class="text-pink-400 font-bold text-xs">F</span>
+        </div>
+        <div id="kpiFemaleCount" class="text-2xl font-bold text-pink-300 tracking-tight">0</div>
+        <div id="kpiGenderRatio" class="mt-1 text-[11px] text-pink-400/90 font-medium">0% M / 0% F</div>
+      </div>
+
+      <!-- Card 6: Memberships & Donations -->
+      <div class="glass-panel p-4 rounded-xl card-glow border-l-4 border-l-purple-500">
+        <div class="flex items-center justify-between text-gray-400 text-xs mb-1">
+          <span>Conversions</span>
+          <svg class="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+        </div>
+        <div class="flex items-baseline gap-2">
+          <span id="kpiMembershipYes" class="text-2xl font-bold text-purple-300">0</span>
+          <span class="text-xs text-gray-400">Mem</span>
+        </div>
+        <div class="mt-1 text-[11px] text-cyan-400">
+          <strong id="kpiDonationYes">0</strong> Donations Logged
+        </div>
+      </div>
+
+    </section>
+
+    <!-- Visual Charts: Row 1 -->
+    <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      
+      <!-- POC Performance Stacked Bar Chart -->
+      <div class="lg:col-span-2 glass-panel p-5 rounded-2xl card-glow">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h3 class="font-bold text-white text-sm">POC Calling Performance</h3>
+            <p class="text-xs text-gray-400">Calls Attempted: Answered vs Unanswered breakdown by Caller</p>
+          </div>
+          <span class="text-xs text-gray-400 bg-gray-800/80 px-2 py-1 rounded">Top 12 POCs</span>
+        </div>
+        <div class="h-72">
+          <canvas id="pocChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Call Status Distribution Donut -->
+      <div class="glass-panel p-5 rounded-2xl card-glow">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h3 class="font-bold text-white text-sm">Call Status Breakdown</h3>
+            <p class="text-xs text-gray-400">Answered, Busy, Switch off, etc.</p>
+          </div>
+        </div>
+        <div class="h-72 flex items-center justify-center">
+          <canvas id="statusChart"></canvas>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- Visual Charts: Row 2 -->
+    <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      
+      <!-- Date of Calling Timeline -->
+      <div class="glass-panel p-5 rounded-2xl card-glow">
+        <div class="flex items-center justify-between mb-3">
+          <div>
+            <h3 class="font-bold text-white text-sm">Date of Calling Trajectory</h3>
+            <p class="text-xs text-gray-400">Daily call volume and answer trends</p>
+          </div>
+        </div>
+        <div class="h-64">
+          <canvas id="timelineChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Gender Breakdown Donut -->
+      <div class="glass-panel p-5 rounded-2xl card-glow">
+        <div class="flex items-center justify-between mb-3">
+          <div>
+            <h3 class="font-bold text-white text-sm">Gender Demographics</h3>
+            <p class="text-xs text-gray-400">Caller gender distribution</p>
+          </div>
+        </div>
+        <div class="h-64 flex items-center justify-center">
+          <canvas id="genderChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Top Calling Districts -->
+      <div class="glass-panel p-5 rounded-2xl card-glow">
+        <div class="flex items-center justify-between mb-3">
+          <div>
+            <h3 class="font-bold text-white text-sm">Top Calling Districts</h3>
+            <p class="text-xs text-gray-400">Geographical distribution of records</p>
+          </div>
+        </div>
+        <div class="h-64">
+          <canvas id="districtChart"></canvas>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- POC Performance Leaderboard Table -->
+    <section class="glass-panel rounded-2xl p-5 card-glow">
+      <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
+        <div>
+          <h3 class="font-bold text-white text-base">POC Performance Leaderboard</h3>
+          <p class="text-xs text-gray-400">Ranked by calls made and answer conversion rate (Click a POC to filter)</p>
+        </div>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left">
+          <thead>
+            <tr class="text-[11px] font-semibold text-gray-400 border-b border-gray-800 uppercase tracking-wider">
+              <th class="py-2.5 px-3">Rank</th>
+              <th class="py-2.5 px-3">POC Caller</th>
+              <th class="py-2.5 px-3">Total Calls</th>
+              <th class="py-2.5 px-3">Answered</th>
+              <th class="py-2.5 px-3">Not Answered</th>
+              <th class="py-2.5 px-3">Answer Rate</th>
+              <th class="py-2.5 px-3">Male / Female</th>
+              <th class="py-2.5 px-3">Membership & Donation</th>
+            </tr>
+          </thead>
+          <tbody id="pocLeaderboardBody" class="divide-y divide-gray-800/40">
+            <!-- Dynamically populated -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Detailed Calling Records Table -->
+    <section class="glass-panel rounded-2xl p-5 card-glow space-y-4">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h3 class="font-bold text-white text-base">Calling Logs & Records</h3>
+          <p class="text-xs text-gray-400">Detailed records from the active working tab</p>
+        </div>
+        
+        <div class="flex items-center gap-3">
+          <div class="flex items-center gap-2 text-xs text-gray-400">
+            <span>Show</span>
+            <select onchange="changePageSize(this.value)" class="bg-gray-800 border border-gray-700 rounded px-2 py-1 text-gray-200">
+              <option value="25">25</option>
+              <option value="50">50</option>
+              <option value="100">100</option>
+            </select>
+            <span>entries</span>
+          </div>
+
+          <button id="exportCsvBtn" class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold flex items-center gap-1.5 transition">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            Export to CSV
+          </button>
+        </div>
+      </div>
+
+      <div class="overflow-x-auto rounded-xl border border-gray-800/80">
+        <table class="w-full text-left">
+          <thead class="bg-gray-800/60 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
+            <tr>
+              <th class="py-2.5 px-3">#</th>
+              <th class="py-2.5 px-3">Calling Date</th>
+              <th class="py-2.5 px-3">POC</th>
+              <th class="py-2.5 px-3">Customer No</th>
+              <th class="py-2.5 px-3">Customer Name</th>
+              <th class="py-2.5 px-3">Status</th>
+              <th class="py-2.5 px-3">Gender</th>
+              <th class="py-2.5 px-3">District</th>
+              <th class="py-2.5 px-3">Membership</th>
+              <th class="py-2.5 px-3">Donation</th>
+            </tr>
+          </thead>
+          <tbody id="recordsTableBody" class="divide-y divide-gray-800/50">
+            <!-- Dynamically populated -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination footer -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2">
+        <div id="paginationInfo" class="text-xs text-gray-400">Showing 0 to 0 of 0 records</div>
+        <div id="paginationButtons" class="flex items-center gap-1"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Google Sheet Repository Modal -->
+  <div id="repoModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-overlay">
+    <div class="glass-panel w-full max-w-3xl rounded-2xl p-6 border border-gray-700/80 shadow-2xl space-y-6 max-h-[90vh] overflow-y-auto">
+      
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between border-b border-gray-800 pb-4">
+        <div>
+          <h3 class="text-lg font-bold text-white flex items-center gap-2">
+            <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+            Google Sheets Repository & Link Manager
+          </h3>
+          <p class="text-xs text-gray-400 mt-0.5">Paste any Google Sheet link. The system automatically reads it, detects working month sheets & compile records.</p>
+        </div>
+        <button onclick="closeRepositoryModal()" class="text-gray-400 hover:text-white p-1 rounded-lg hover:bg-gray-800">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <!-- Add New Sheet Input Card -->
+      <form id="addSheetForm" class="p-4 rounded-xl bg-gray-800/40 border border-gray-700/60 space-y-3">
+        <h4 class="text-xs font-semibold text-blue-400 uppercase tracking-wider">Connect New Google Sheet</h4>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div class="sm:col-span-2">
+            <input type="text" id="newSheetUrl" placeholder="Paste Google Sheet URL (https://docs.google.com/spreadsheets/d/...)" class="w-full bg-gray-900/90 border border-gray-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500 placeholder-gray-500">
+          </div>
+          <div>
+            <input type="text" id="newSheetLabel" placeholder="Optional Label (e.g. March 2026)" class="w-full bg-gray-900/90 border border-gray-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500 placeholder-gray-500">
+          </div>
+        </div>
+        <div class="flex items-center justify-between pt-1">
+          <div id="addSheetStatus" class="text-xs"></div>
+          <button type="submit" id="addSheetBtn" class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold flex items-center gap-1.5 transition">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            Add & Analyze Sheet
+          </button>
+        </div>
+      </form>
+
+      <!-- Auto-detection Explanation Note -->
+      <div class="p-3 rounded-lg bg-blue-500/10 border border-blue-500/20 text-xs text-blue-300 flex items-start gap-2.5">
+        <svg class="w-4 h-4 text-blue-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <div>
+          <strong class="font-semibold text-blue-200">How Auto-Detection Works:</strong>
+          The repository scans all tabs in your sheet. Tabs with month names and years (e.g. <code class="bg-blue-900/40 px-1 py-0.5 rounded text-[11px]">September 2026</code>, <code class="bg-blue-900/40 px-1 py-0.5 rounded text-[11px]">Jan, 2026</code>, <code class="bg-blue-900/40 px-1 py-0.5 rounded text-[11px]">Oct 2025</code>) are automatically identified as active calling sheets. Compile tabs (e.g. <code class="bg-blue-900/40 px-1 py-0.5 rounded text-[11px]">Compile</code>, <code class="bg-blue-900/40 px-1 py-0.5 rounded text-[11px]">Donation</code>, <code class="bg-blue-900/40 px-1 py-0.5 rounded text-[11px]">Membership</code>) are also detected, and you can switch between tabs anytime.
+        </div>
+      </div>
+
+      <!-- Registered Sheets List -->
+      <div class="space-y-3">
+        <h4 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Registered Google Sheets</h4>
+        <div id="repositoryList" class="space-y-3">
+          <!-- Dynamically populated -->
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="flex justify-end pt-4 border-t border-gray-800">
+        <button onclick="closeRepositoryModal()" class="px-4 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs font-medium">
+          Close
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="/js/charts.js"></script>
+  <script src="/js/sheet_manager.js"></script>
+  <script src="/js/app.js"></script>
+</body>
+</html>
+

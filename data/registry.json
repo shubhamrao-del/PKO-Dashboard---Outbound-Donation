@@ -1,0 +1,122 @@
+[
+  {
+    "id": "1VUkgSQvxW0803m4nX-LQddoDTIQQCAudk25kAk0Fft4",
+    "url": "https://docs.google.com/spreadsheets/d/1VUkgSQvxW0803m4nX-LQddoDTIQQCAudk25kAk0Fft4/edit?usp=sharing",
+    "label": "Calling Sheet - September 2026",
+    "active_tab": "September 2026",
+    "tabs": [
+      {
+        "name": "September 2026",
+        "type": "monthly_calling",
+        "score": 10,
+        "description": "Monthly Calling Sheet (Working Data)"
+      },
+      {
+        "name": "Data Validation",
+        "type": "report_summary",
+        "score": 3,
+        "description": "Report / Summary Sheet"
+      },
+      {
+        "name": "Report",
+        "type": "report_summary",
+        "score": 3,
+        "description": "Report / Summary Sheet"
+      },
+      {
+        "name": "Sheet3",
+        "type": "other",
+        "score": 1,
+        "description": "Other Sheet"
+      }
+    ],
+    "total_rows": 6560,
+    "last_synced": [
+      "2026-11-04 18:11:12"
+    ],
+    "status": "Ready",
+    "answer_rate": 42.3
+  },
+  {
+    "id": "1-99JfloH45bUZAkLH8jukV099kg-Zx32kFz0nvw8exE",
+    "url": "https://docs.google.com/spreadsheets/d/1-99JfloH45bUZAkLH8jukV099kg-Zx32kFz0nvw8exE/edit?usp=sharing",
+    "label": "Calling Sheet - Jan 2026",
+    "active_tab": " Jan, 2026",
+    "tabs": [
+      {
+        "name": " Jan, 2026",
+        "type": "monthly_calling",
+        "score": 10,
+        "description": "Monthly Calling Sheet (Working Data)"
+      },
+      {
+        "name": "Format",
+        "type": "report_summary",
+        "score": 3,
+        "description": "Report / Summary Sheet"
+      },
+      {
+        "name": "Report",
+        "type": "report_summary",
+        "score": 3,
+        "description": "Report / Summary Sheet"
+      },
+      {
+        "name": "Sheet22",
+        "type": "other",
+        "score": 1,
+        "description": "Other Sheet"
+      }
+    ],
+    "total_rows": 15598,
+    "last_synced": [
+      "2026-11-04 18:11:19"
+    ],
+    "status": "Ready",
+    "answer_rate": 3.8
+  },
+  {
+    "id": "1XTL84J4YTqIvM_qzUcguRbyrnEUrz7czjI6Ugxobo0M",
+    "url": "https://docs.google.com/spreadsheets/d/1XTL84J4YTqIvM_qzUcguRbyrnEUrz7czjI6Ugxobo0M/edit?usp=sharing",
+    "label": "Sheet - August 2026",
+    "active_tab": "August 2026",
+    "tabs": [
+      {
+        "name": "August 2026",
+        "type": "monthly_calling",
+        "score": 10,
+        "description": "Monthly Calling Sheet (Working Data)"
+      },
+      {
+        "name": "Data Validation",
+        "type": "report_summary",
+        "score": 3,
+        "description": "Report / Summary Sheet"
+      },
+      {
+        "name": "Report",
+        "type": "report_summary",
+        "score": 3,
+        "description": "Report / Summary Sheet"
+      },
+      {
+        "name": "Sheet8",
+        "type": "other",
+        "score": 1,
+        "description": "Other Sheet"
+      },
+      {
+        "name": "Sheet3",
+        "type": "other",
+        "score": 1,
+        "description": "Other Sheet"
+      }
+    ],
+    "total_rows": 11711,
+    "last_synced": [
+      "2026-11-04 18:11:25"
+    ],
+    "status": "Ready",
+    "answer_rate": 33.7
+  }
+]
