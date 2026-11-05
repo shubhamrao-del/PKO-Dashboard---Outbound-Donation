@@ -115,3 +115,7 @@ body {
   width: 100%;
 }
 
+input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+    cursor: pointer;
+}
