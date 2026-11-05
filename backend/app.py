@@ -48,7 +48,15 @@ def add_sheet(req: AddSheetRequest):
         return {"success": True, "sheet": sheet}
     except Exception as e:
         logger.error(f"Error adding sheet: {e}")
-        raise HTTPException(status_code=400, detail=str(e))
+        error_msg = str(e)
+        if "not well-formed" in error_msg or "syntax error" in error_msg.lower() or "html" in error_msg.lower():
+            raise HTTPException(
+                status_code=400, 
+                detail="Google Sheet is private or format is invalid. Please make sure the sheet is public ('Anyone with the link can view')."
+            )
+        
+        raise HTTPException(status_code=400, detail=error_msg)
+      
 
 @app.post("/api/sheets/{sheet_id}/sync")
 def sync_sheet(sheet_id: str, tab_name: Optional[str] = None):
