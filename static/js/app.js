@@ -428,38 +428,36 @@ function changePageSize(size) {
 }
 
 // Modal open/close helpers
-function openRepositoryModal() {
-  const modal = document.getElementById('repoModal');
-  if (modal) {
-    modal.classList.remove('hidden');
-    modal.style.display = 'flex';
-    if (typeof renderRepositoryModalList === 'function') {
-      renderRepositoryModalList();
+function openRepoModal() {
+    const modal = document.getElementById('repoModal');
+    if (modal) {
+        modal.classList.remove('hidden');
+        modal.style.display = 'flex';
+        if (typeof renderRepositoryModalList === 'function') {
+            renderRepositoryModalList();
+        }
     }
-  }
 }
 
-function closeRepositoryModal() {
-  const modal = document.getElementById('repoModal');
-  if (modal) {
-    modal.classList.add('hidden');
-    modal.style.display = 'none';
-  }
+function closeRepoModal() {
+    const modal = document.getElementById('repoModal');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.style.display = 'none';
+    }
 }
 
-const openRepoModal = openRepositoryModal;
-const closeRepoModal = closeRepositoryModal;
-
-window.openRepositoryModal = openRepositoryModal;
-window.closeRepositoryModal = closeRepositoryModal;
+// Make functions globally available for HTML onclick events
 window.openRepoModal = openRepoModal;
 window.closeRepoModal = closeRepoModal;
+window.openRepositoryModal = openRepoModal;
+window.closeRepositoryModal = closeRepoModal;
 
 // Close modal on Escape key press
 document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') {
-    closeRepoModal();
-  }
+    if (e.key === 'Escape') {
+        closeRepoModal();
+    }
 });
 
 
