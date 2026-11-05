@@ -92,7 +92,7 @@ function updateTabSelectorForCurrentSheet() {
 }
 
 function renderRepositoryModalList() {
-  const container = document.getElementById('repositoryList');
+  const container = document.getElementById('repositoryModalList') || document.getElementById('repositoryList');
   const countBadge = document.getElementById('repoCountBadge');
   if (!container) return;
 
@@ -281,4 +281,28 @@ async function changeSheetTab(sheetId, tabName) {
     alert(`Error switching tab: ${err.message}`);
   }
 }
+
+// Modal open/close helpers
+function openRepoModal() {
+  const modal = document.getElementById('repoModal');
+  if (modal) {
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
+    renderRepositoryModalList();
+  }
+}
+
+function closeRepoModal() {
+  const modal = document.getElementById('repoModal');
+  if (modal) {
+    modal.classList.add('hidden');
+    modal.style.display = 'none';
+  }
+}
+
+window.openRepoModal = openRepoModal;
+window.closeRepoModal = closeRepoModal;
+window.openRepositoryModal = openRepoModal;
+window.closeRepositoryModal = closeRepoModal;
+
 

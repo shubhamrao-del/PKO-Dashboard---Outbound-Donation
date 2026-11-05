@@ -158,14 +158,6 @@ function setupEventListeners() {
   if (addSheetForm) {
     addSheetForm.addEventListener('submit', handleAddSheetSubmit);
   }
-  // cut karne k liye
-  function closeRepoModal() {
-    const modal = document.getElementById('repoModal');
-    if (modal) {
-        modal.classList.add('hidden');
-        modal.style.display = 'none'; // Forcefully hide karne ke liye
-    }
-}
 
   // CSV Export button
   const exportCsvBtn = document.getElementById('exportCsvBtn');
@@ -440,7 +432,10 @@ function openRepositoryModal() {
   const modal = document.getElementById('repoModal');
   if (modal) {
     modal.classList.remove('hidden');
-    renderRepositoryModalList();
+    modal.style.display = 'flex';
+    if (typeof renderRepositoryModalList === 'function') {
+      renderRepositoryModalList();
+    }
   }
 }
 
@@ -448,6 +443,23 @@ function closeRepositoryModal() {
   const modal = document.getElementById('repoModal');
   if (modal) {
     modal.classList.add('hidden');
+    modal.style.display = 'none';
   }
 }
+
+const openRepoModal = openRepositoryModal;
+const closeRepoModal = closeRepositoryModal;
+
+window.openRepositoryModal = openRepositoryModal;
+window.closeRepositoryModal = closeRepositoryModal;
+window.openRepoModal = openRepoModal;
+window.closeRepoModal = closeRepoModal;
+
+// Close modal on Escape key press
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    closeRepoModal();
+  }
+});
+
 
