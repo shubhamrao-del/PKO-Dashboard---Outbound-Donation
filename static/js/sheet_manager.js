@@ -179,6 +179,7 @@ async function handleAddSheetSubmit(e) {
 
   const url = urlInput.value.trim();
   const label = labelInput.value.trim();
+  const password  = passwordInput ? passwordInput.value.trim() : null
 
   if (!url) {
     statusDiv.innerHTML = '<span class="text-red-400 text-xs">Please paste a Google Sheets URL or ID.</span>';
