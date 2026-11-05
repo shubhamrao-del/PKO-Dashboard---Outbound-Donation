@@ -163,6 +163,7 @@ function setupEventListeners() {
     const modal = document.getElementById('repoModal');
     if (modal) {
         modal.classList.add('hidden');
+        modal.style.display = 'none'; // Forcefully hide karne ke liye
     }
 }
 
