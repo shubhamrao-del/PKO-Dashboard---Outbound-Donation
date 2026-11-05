@@ -158,6 +158,13 @@ function setupEventListeners() {
   if (addSheetForm) {
     addSheetForm.addEventListener('submit', handleAddSheetSubmit);
   }
+  // cut karne k liye
+  function closeRepoModal() {
+    const modal = document.getElementById('repoModal');
+    if (modal) {
+        modal.classList.add('hidden');
+    }
+}
 
   // CSV Export button
   const exportCsvBtn = document.getElementById('exportCsvBtn');

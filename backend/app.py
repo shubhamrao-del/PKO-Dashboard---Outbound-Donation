@@ -68,6 +68,8 @@ def sync_sheet(sheet_id: str, tab_name: Optional[str] = None):
         logger.error(f"Error syncing sheet {sheet_id}: {e}")
         raise HTTPException(status_code=400, detail=str(e))
 
+
+
 @app.delete("/api/sheets/{sheet_id}")
 def delete_sheet(sheet_id: str):
     """Remove a sheet from the repository."""
@@ -85,6 +87,8 @@ def set_active_tab(sheet_id: str, req: SetTabRequest):
         return {"success": True, "sheet": sheet}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+
 
 def filter_records(
     records: List[dict],
