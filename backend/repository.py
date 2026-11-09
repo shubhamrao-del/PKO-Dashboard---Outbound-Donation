@@ -332,10 +332,13 @@ class SheetRepository:
                 for dt_stat in analytics.get("date_timeline", []):
                     d = dt_stat["date"]
                     if d not in date_counts:
-                        date_counts[d] = {"date": d, "total": 0, "answered": 0, "not_answered": 0}
+                        date_counts[d] = {"date": d, "total": 0, "answered": 0, "not_answered": 0, "male": 0, "female": 0, "active_pocs": 0}
                     date_counts[d]["total"] += dt_stat.get("total", 0)
                     date_counts[d]["answered"] += dt_stat.get("answered", 0)
                     date_counts[d]["not_answered"] += dt_stat.get("not_answered", 0)
+                    date_counts[d]["male"] += dt_stat.get("male", 0)
+                    date_counts[d]["female"] += dt_stat.get("female", 0)
+                    date_counts[d]["active_pocs"] = max(date_counts[d]["active_pocs"], dt_stat.get("active_pocs", 0))
 
                 # Merge districts
                 for dist in analytics.get("top_districts", []):
@@ -372,7 +375,21 @@ class SheetRepository:
             p["answer_rate"] = round((p["answered"] / p["total"] * 100), 1) if p["total"] > 0 else 0
         poc_list.sort(key=lambda x: x["total"], reverse=True)
 
-        date_timeline = sorted(list(date_counts.values()), key=lambda x: x["date"])
+        date_timeline = []
+        for d_val, d_info in sorted(date_counts.items(), key=lambda x: x[0]):
+            t = d_info["total"]
+            a = d_info["answered"]
+            rate = round((a / t * 100), 1) if t > 0 else 0
+            date_timeline.append({
+                "date": d_val,
+                "total": t,
+                "answered": a,
+                "not_answered": d_info["not_answered"],
+                "answer_rate": rate,
+                "male": d_info.get("male", 0),
+                "female": d_info.get("female", 0),
+                "active_pocs": d_info.get("active_pocs", 0)
+            })
         top_districts = sorted([{"district": k, "count": v} for k, v in district_counts.items()], key=lambda x: x["count"], reverse=True)[:15]
         top_purposes = sorted([{"purpose": k, "count": v} for k, v in purpose_counts.items()], key=lambda x: x["count"], reverse=True)[:10]
 

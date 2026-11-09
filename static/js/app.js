@@ -21,6 +21,33 @@ let tableState = {
 
 // Expose fetchAnalyticsData globally for sheet_manager
 window.fetchAnalyticsData = fetchAnalyticsData;
+window.fetchTableRecords = fetchTableRecords;
+
+function selectSheet(sheetId, tabName) {
+  currentFilter.sheet_id = sheetId;
+  const sheetSelect = document.getElementById('sheetSelect');
+  if (sheetSelect) {
+    sheetSelect.value = sheetId;
+  }
+  updateTabSelectorForCurrentSheet();
+  const tabSelect = document.getElementById('tabSelect');
+  const tabSelectContainer = document.getElementById('tabSelectContainer');
+  if (tabName) {
+    currentFilter.tab_name = tabName;
+    if (tabSelect) tabSelect.value = tabName;
+  } else if (tabSelect && tabSelectContainer && !tabSelectContainer.classList.contains('hidden')) {
+    currentFilter.tab_name = tabSelect.value;
+  } else {
+    currentFilter.tab_name = '';
+  }
+  currentFilter.poc = 'all';
+  const pocFilter = document.getElementById('pocFilter');
+  if (pocFilter) pocFilter.value = 'all';
+
+  fetchAnalyticsData();
+  fetchTableRecords();
+}
+window.selectSheet = selectSheet;
 
 document.addEventListener('DOMContentLoaded', async () => {
   setupEventListeners();
@@ -32,12 +59,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 function setupEventListeners() {
   // Sheet select changed
   const sheetSelect = document.getElementById('sheetSelect');
+  const tabSelectContainer = document.getElementById('tabSelectContainer');
   if (sheetSelect) {
     sheetSelect.addEventListener('change', () => {
       currentFilter.sheet_id = sheetSelect.value;
       updateTabSelectorForCurrentSheet();
       const tabSelect = document.getElementById('tabSelect');
-      currentFilter.tab_name = tabSelect && !tabSelectContainer.classList.contains('hidden') ? tabSelect.value : '';
+      currentFilter.tab_name = tabSelect && tabSelectContainer && !tabSelectContainer.classList.contains('hidden') ? tabSelect.value : '';
       fetchAnalyticsData();
       fetchTableRecords();
     });
@@ -195,9 +223,14 @@ async function fetchAnalyticsData() {
     const data = await res.json();
     if (!res.ok) throw new Error(data.detail || 'Failed to fetch analytics');
 
+    if (data.filter_options && data.filter_options.max_date) {
+      window.latestDateAvailable = data.filter_options.max_date;
+    }
+
     renderKpiCards(data.analytics, data.total_rows);
     renderCharts(data.analytics);
     renderPocLeaderboard(data.analytics.poc_summary || []);
+    renderDayActivityTable(data.analytics.date_timeline || []);
     updateFilterOptions(data.filter_options);
   } catch (err) {
     console.error('Analytics fetch error:', err);
@@ -240,30 +273,186 @@ function renderKpiCards(analytics, totalRows) {
 function updateFilterOptions(options) {
   if (!options) return;
 
-  // Update POC dropdown if empty
+  // Dynamically update POC dropdown to match current sheet
   const pocSelect = document.getElementById('pocFilter');
-  if (pocSelect && options.pocs && pocSelect.options.length <= 1) {
+  if (pocSelect && options.pocs) {
+    const currentPoc = currentFilter.poc || 'all';
+    pocSelect.innerHTML = '<option value="all">All POCs</option>';
     options.pocs.forEach(p => {
       const opt = document.createElement('option');
       opt.value = p;
       opt.textContent = p;
+      if (p.toLowerCase() === currentPoc.toLowerCase()) {
+        opt.selected = true;
+      }
       pocSelect.appendChild(opt);
     });
+    if (currentPoc !== 'all' && ![...pocSelect.options].some(o => o.value.toLowerCase() === currentPoc.toLowerCase())) {
+      currentFilter.poc = 'all';
+      pocSelect.value = 'all';
+    }
   }
 
-  // Update Status dropdown if empty
+  // Dynamically update Status dropdown
   const statusSelect = document.getElementById('statusFilter');
-  if (statusSelect && options.statuses && statusSelect.options.length <= 3) {
+  if (statusSelect && options.statuses) {
+    const currentStatus = currentFilter.status || 'all';
+    statusSelect.innerHTML = `
+      <option value="all">All Statuses</option>
+      <option value="answered">Answered Only</option>
+      <option value="not answered">Unanswered / Drop</option>
+    `;
     options.statuses.forEach(s => {
       if (!['Answered', 'Not Answered'].includes(s)) {
         const opt = document.createElement('option');
         opt.value = s;
         opt.textContent = s;
+        if (s.toLowerCase() === currentStatus.toLowerCase()) {
+          opt.selected = true;
+        }
         statusSelect.appendChild(opt);
       }
     });
   }
+
+  // Set date bounds
+  const dateFrom = document.getElementById('dateFrom');
+  const dateTo = document.getElementById('dateTo');
+  if (dateFrom && options.min_date) {
+    dateFrom.min = options.min_date;
+    dateFrom.max = options.max_date || '';
+  }
+  if (dateTo && options.max_date) {
+    dateTo.min = options.min_date || '';
+    dateTo.max = options.max_date;
+  }
 }
+
+function renderDayActivityTable(timeline) {
+  const tbody = document.getElementById('dayActivityTableBody');
+  const badge = document.getElementById('daySummaryBadge');
+  if (!tbody) return;
+
+  tbody.innerHTML = '';
+  if (!timeline || timeline.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="8" class="text-center py-6 text-gray-400">No daily calling records found for this filter</td></tr>`;
+    if (badge) badge.textContent = '0 Active Days';
+    return;
+  }
+
+  if (badge) {
+    badge.textContent = `${timeline.length} Calling Days Recorded`;
+  }
+
+  // Sort descending by date (latest first for day-to-day activity view)
+  const sortedDays = [...timeline].sort((a, b) => b.date.localeCompare(a.date));
+
+  sortedDays.forEach(day => {
+    const tr = document.createElement('tr');
+    tr.className = 'hover:bg-gray-800/40 transition border-b border-gray-800/60';
+
+    let rateBadgeClass = 'badge-rate-low';
+    if (day.answer_rate >= 40) rateBadgeClass = 'badge-rate-high';
+    else if (day.answer_rate >= 15) rateBadgeClass = 'badge-rate-mid';
+
+    const isCurrentDateSelected = currentFilter.date_from === day.date && currentFilter.date_to === day.date;
+
+    tr.innerHTML = `
+      <td class="py-2.5 px-3 font-mono font-medium text-white flex items-center gap-1.5">
+        <span class="w-2 h-2 rounded-full ${day.answered > 0 ? 'bg-emerald-400' : 'bg-rose-400'}"></span>
+        ${day.date}
+      </td>
+      <td class="py-2.5 px-3 font-mono text-gray-200">${day.total.toLocaleString()}</td>
+      <td class="py-2.5 px-3 font-mono text-emerald-400 font-semibold">${day.answered.toLocaleString()}</td>
+      <td class="py-2.5 px-3 font-mono text-rose-400">${day.not_answered.toLocaleString()}</td>
+      <td class="py-2.5 px-3">
+        <span class="px-2 py-0.5 rounded-full text-xs font-semibold ${rateBadgeClass}">
+          ${day.answer_rate}%
+        </span>
+      </td>
+      <td class="py-2.5 px-3 text-xs text-gray-300">
+        <span class="text-blue-400">${day.male || 0} M</span> / <span class="text-pink-400">${day.female || 0} F</span>
+      </td>
+      <td class="py-2.5 px-3 font-mono text-gray-300">
+        ${day.active_pocs || '-'} Callers
+      </td>
+      <td class="py-2.5 px-3">
+        <button onclick="filterBySingleDate('${day.date}')" class="px-2.5 py-1 rounded text-xs font-medium ${isCurrentDateSelected ? 'bg-blue-600 text-white' : 'bg-gray-800 hover:bg-gray-700 text-blue-400 hover:text-white border border-gray-700'} transition">
+          ${isCurrentDateSelected ? 'Selected' : 'Filter Day'}
+        </button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function filterBySingleDate(dateStr) {
+  const dateFrom = document.getElementById('dateFrom');
+  const dateTo = document.getElementById('dateTo');
+  
+  if (currentFilter.date_from === dateStr && currentFilter.date_to === dateStr) {
+    // Toggle off
+    currentFilter.date_from = '';
+    currentFilter.date_to = '';
+    if (dateFrom) dateFrom.value = '';
+    if (dateTo) dateTo.value = '';
+  } else {
+    currentFilter.date_from = dateStr;
+    currentFilter.date_to = dateStr;
+    if (dateFrom) dateFrom.value = dateStr;
+    if (dateTo) dateTo.value = dateStr;
+  }
+  
+  fetchAnalyticsData();
+  fetchTableRecords();
+}
+
+function setQuickDateRange(range) {
+  const dateFrom = document.getElementById('dateFrom');
+  const dateTo = document.getElementById('dateTo');
+  
+  if (range === 'all') {
+    currentFilter.date_from = '';
+    currentFilter.date_to = '';
+    if (dateFrom) dateFrom.value = '';
+    if (dateTo) dateTo.value = '';
+  } else if (range === 'latest' && window.latestDateAvailable) {
+    currentFilter.date_from = window.latestDateAvailable;
+    currentFilter.date_to = window.latestDateAvailable;
+    if (dateFrom) dateFrom.value = window.latestDateAvailable;
+    if (dateTo) dateTo.value = window.latestDateAvailable;
+  } else if (range === '7d' && window.latestDateAvailable) {
+    const end = new Date(window.latestDateAvailable);
+    const start = new Date(end);
+    start.setDate(start.getDate() - 7);
+    const startStr = start.toISOString().split('T')[0];
+    currentFilter.date_from = startStr;
+    currentFilter.date_to = window.latestDateAvailable;
+    if (dateFrom) dateFrom.value = startStr;
+    if (dateTo) dateTo.value = window.latestDateAvailable;
+  } else if (range === '14d' && window.latestDateAvailable) {
+    const end = new Date(window.latestDateAvailable);
+    const start = new Date(end);
+    start.setDate(start.getDate() - 14);
+    const startStr = start.toISOString().split('T')[0];
+    currentFilter.date_from = startStr;
+    currentFilter.date_to = window.latestDateAvailable;
+    if (dateFrom) dateFrom.value = startStr;
+    if (dateTo) dateTo.value = window.latestDateAvailable;
+  }
+  
+  fetchAnalyticsData();
+  fetchTableRecords();
+}
+
+function clearDateFilter() {
+  setQuickDateRange('all');
+}
+
+window.filterBySingleDate = filterBySingleDate;
+window.setQuickDateRange = setQuickDateRange;
+window.clearDateFilter = clearDateFilter;
+window.renderDayActivityTable = renderDayActivityTable;
 
 function renderPocLeaderboard(pocList) {
   const tbody = document.getElementById('pocLeaderboardBody');

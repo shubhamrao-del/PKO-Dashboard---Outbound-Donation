@@ -2,23 +2,23 @@
 
 let registeredSheets = [];
 
-async function loadSheetsRegistry() {
+async function loadSheetsRegistry(selectedSheetId) {
   try {
     const res = await fetch('/api/sheets');
     const data = await res.json();
     registeredSheets = data.sheets || [];
-    renderSheetSelectorDropdown();
+    renderSheetSelectorDropdown(selectedSheetId);
     renderRepositoryModalList();
   } catch (err) {
     console.error('Failed to load sheets registry:', err);
   }
 }
 
-function renderSheetSelectorDropdown() {
+function renderSheetSelectorDropdown(selectedSheetId) {
   const select = document.getElementById('sheetSelect');
   if (!select) return;
 
-  const currentVal = select.value;
+  const currentVal = selectedSheetId || (typeof currentFilter !== 'undefined' && currentFilter.sheet_id ? currentFilter.sheet_id : select.value) || 'all';
   select.innerHTML = '';
 
   // All Sheets option
@@ -34,7 +34,7 @@ function renderSheetSelectorDropdown() {
     select.appendChild(opt);
   });
 
-  if (currentVal && [...select.options].some(o => o.value === currentVal)) {
+  if ([...select.options].some(o => o.value === currentVal)) {
     select.value = currentVal;
   } else {
     select.value = 'all';
@@ -200,7 +200,7 @@ async function handleAddSheetSubmit(e) {
     const res = await fetch('/api/sheets', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url, label, password})
+      body: JSON.stringify({ url, label, password })
     });
 
     const data = await res.json();
@@ -210,17 +210,27 @@ async function handleAddSheetSubmit(e) {
 
     urlInput.value = '';
     labelInput.value = '';
+    if (passwordInput) passwordInput.value = '';
     statusDiv.innerHTML = `<span class="text-emerald-400 text-xs font-medium">✓ Successfully added! Auto-detected working tab: <strong>${data.sheet.active_tab}</strong> (${data.sheet.total_rows.toLocaleString()} rows)</span>`;
 
-    await loadSheetsRegistry();
-    // Switch to this new sheet immediately
-    document.getElementById('sheetSelect').value = data.sheet.id;
-    updateTabSelectorForCurrentSheet();
-    window.fetchAnalyticsData();
+    await loadSheetsRegistry(data.sheet.id);
+    if (typeof window.selectSheet === 'function') {
+      window.selectSheet(data.sheet.id, data.sheet.active_tab);
+    } else {
+      if (typeof currentFilter !== 'undefined') {
+        currentFilter.sheet_id = data.sheet.id;
+        currentFilter.tab_name = data.sheet.active_tab;
+      }
+      const sel = document.getElementById('sheetSelect');
+      if (sel) sel.value = data.sheet.id;
+      updateTabSelectorForCurrentSheet();
+      if (typeof window.fetchAnalyticsData === 'function') window.fetchAnalyticsData();
+      if (typeof window.fetchTableRecords === 'function') window.fetchTableRecords();
+    }
 
     setTimeout(() => {
       statusDiv.innerHTML = '';
-    }, 5000);
+    }, 6000);
   } catch (err) {
     statusDiv.innerHTML = `<span class="text-red-400 text-xs font-medium">Error: ${err.message}</span>`;
   } finally {

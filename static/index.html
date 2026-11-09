@@ -8,7 +8,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Chart.js CDN -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="stylesheet" href="/css/style.css">
   <script>
     tailwind.config = {
       darkMode: 'class',
@@ -158,6 +158,16 @@
           </button>
         </div>
 
+      </div>
+
+      <!-- Quick Date Range Pills -->
+      <div class="mt-3 pt-3 border-t border-gray-800/60 flex items-center gap-2 flex-wrap text-xs">
+        <span class="text-[11px] text-gray-400 font-medium">Quick Date Filter:</span>
+        <button type="button" onclick="setQuickDateRange('all')" class="px-2.5 py-1 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white transition">All Dates</button>
+        <button type="button" onclick="setQuickDateRange('latest')" class="px-2.5 py-1 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white transition">Latest Active Day</button>
+        <button type="button" onclick="setQuickDateRange('7d')" class="px-2.5 py-1 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white transition">Last 7 Days</button>
+        <button type="button" onclick="setQuickDateRange('14d')" class="px-2.5 py-1 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white transition">Last 14 Days</button>
+        <button type="button" onclick="clearDateFilter()" class="px-2.5 py-1 rounded-lg bg-gray-800/60 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 transition">Clear Dates</button>
       </div>
     </section>
 
@@ -337,6 +347,40 @@
       </div>
     </section>
 
+    <!-- Day-to-Day Calling Activity & Performance -->
+    <section class="glass-panel rounded-2xl p-5 card-glow space-y-4">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        <div>
+          <h3 class="font-bold text-white text-base flex items-center gap-2">
+            <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+            Day-to-Day Calling Activity
+          </h3>
+          <p class="text-xs text-gray-400">Daily calling performance breakdown (Click any date to isolate that day's activity)</p>
+        </div>
+        <div id="daySummaryBadge" class="text-xs text-gray-300 font-medium bg-gray-800/80 px-2.5 py-1 rounded-lg"></div>
+      </div>
+
+      <div class="overflow-x-auto rounded-xl border border-gray-800/80">
+        <table class="w-full text-left">
+          <thead class="bg-gray-800/60 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
+            <tr>
+              <th class="py-2.5 px-3">Date</th>
+              <th class="py-2.5 px-3">Total Calls</th>
+              <th class="py-2.5 px-3">Answered</th>
+              <th class="py-2.5 px-3">Not Answered</th>
+              <th class="py-2.5 px-3">Answer Rate %</th>
+              <th class="py-2.5 px-3">Male / Female</th>
+              <th class="py-2.5 px-3">Active Callers</th>
+              <th class="py-2.5 px-3">Action</th>
+            </tr>
+          </thead>
+          <tbody id="dayActivityTableBody" class="divide-y divide-gray-800/50 text-xs">
+            <!-- Dynamically populated -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
     <!-- Detailed Calling Records Table -->
     <section class="glass-panel rounded-2xl p-5 card-glow space-y-4">
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -431,7 +475,7 @@
                     </div>
                     <!-- Password -->
                     <div class="w-full md:w-1/4">
-                        <input type="password" id="adminPassword" placeholder="Admin Password" class="w-full bg-gray-900/80 border border-gray-700 rounded-lg px-3 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-blue-500">
+                        <input type="password" id="adminPassword" placeholder="Admin Password (Optional)" class="w-full bg-gray-900/80 border border-gray-700 rounded-lg px-3 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-blue-500">
                     </div>
                     <!-- Submit Button -->
                     <button type="submit" id="addSheetBtn" class="w-full md:w-auto whitespace-nowrap px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium transition flex items-center justify-center gap-2">

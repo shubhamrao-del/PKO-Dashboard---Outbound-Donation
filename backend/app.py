@@ -27,7 +27,7 @@ ADMIN_PASSWORD = "1234"
 class AddSheetRequest(BaseModel):
     url: str
     label: Optional[str] = None
-    password: str
+    password: Optional[str] = None
 
 class SetTabRequest(BaseModel):
     tab_name: str
@@ -41,8 +41,6 @@ def get_sheets():
 @app.post("/api/sheets")
 def add_sheet(req: AddSheetRequest):
     """Add a new Google Sheet URL to the repository."""
-    if req.password != ADMIN_PASSWORD:
-        raise HTTPException(status_code=403, detail="Galat password! Sirf admin hi naya sheet add kar sakta hai.")
     try:
         sheet = repository.add_sheet(req.url, req.label)
         return {"success": True, "sheet": sheet}
@@ -54,7 +52,6 @@ def add_sheet(req: AddSheetRequest):
                 status_code=400, 
                 detail="Google Sheet is private or format is invalid. Please make sure the sheet is public ('Anyone with the link can view')."
             )
-        
         raise HTTPException(status_code=400, detail=error_msg)
       
 
@@ -193,12 +190,26 @@ def recompute_analytics(filtered: List[dict]) -> dict:
 
         if d:
             if d not in date_counts:
-                date_counts[d] = {'date': d, 'total': 0, 'answered': 0, 'not_answered': 0}
+                date_counts[d] = {
+                    'date': d,
+                    'total': 0,
+                    'answered': 0,
+                    'not_answered': 0,
+                    'male': 0,
+                    'female': 0,
+                    'pocs': set()
+                }
             date_counts[d]['total'] += 1
             if is_ans:
                 date_counts[d]['answered'] += 1
             else:
                 date_counts[d]['not_answered'] += 1
+            if g == 'Male':
+                date_counts[d]['male'] += 1
+            elif g == 'Female':
+                date_counts[d]['female'] += 1
+            if poc:
+                date_counts[d]['pocs'].add(poc)
 
         if dist and dist.lower() not in ['na', 'none', 'null', '0', '-']:
             district_counts[dist] = district_counts.get(dist, 0) + 1
@@ -225,7 +236,21 @@ def recompute_analytics(filtered: List[dict]) -> dict:
         p['answer_rate'] = round((p['answered'] / p['total'] * 100), 1) if p['total'] > 0 else 0
     poc_list.sort(key=lambda x: x['total'], reverse=True)
 
-    date_timeline = sorted(list(date_counts.values()), key=lambda x: x['date'])
+    date_timeline = []
+    for d_val, d_info in sorted(date_counts.items(), key=lambda x: x[0]):
+        t = d_info['total']
+        a = d_info['answered']
+        rate = round((a / t * 100), 1) if t > 0 else 0
+        date_timeline.append({
+            'date': d_val,
+            'total': t,
+            'answered': a,
+            'not_answered': d_info['not_answered'],
+            'answer_rate': rate,
+            'male': d_info['male'],
+            'female': d_info['female'],
+            'active_pocs': len(d_info['pocs'])
+        })
     top_districts = sorted([{'district': k, 'count': v} for k, v in district_counts.items()], key=lambda x: x['count'], reverse=True)[:15]
     top_purposes = sorted([{'purpose': k, 'count': v} for k, v in purpose_counts.items()], key=lambda x: x['count'], reverse=True)[:10]
 
@@ -407,4 +432,5 @@ def export_csv(
     )
 
 # Mount static directory for frontend
+app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static_assets")
 app.mount("/", StaticFiles(directory=str(STATIC_DIR), html=True), name="static")

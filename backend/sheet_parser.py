@@ -302,12 +302,26 @@ def parse_sheet_tab(xlsx_path: str, tab_name: str, max_records_for_ui: int = 500
         # Date counts
         if call_date and re.match(r'^\d{4}-\d{2}-\d{2}$', call_date):
             if call_date not in date_counts:
-                date_counts[call_date] = {'date': call_date, 'total': 0, 'answered': 0, 'not_answered': 0}
+                date_counts[call_date] = {
+                    'date': call_date,
+                    'total': 0,
+                    'answered': 0,
+                    'not_answered': 0,
+                    'male': 0,
+                    'female': 0,
+                    'pocs': set()
+                }
             date_counts[call_date]['total'] += 1
             if is_ans:
                 date_counts[call_date]['answered'] += 1
             else:
                 date_counts[call_date]['not_answered'] += 1
+            if gender_norm == 'Male':
+                date_counts[call_date]['male'] += 1
+            elif gender_norm == 'Female':
+                date_counts[call_date]['female'] += 1
+            if poc:
+                date_counts[call_date]['pocs'].add(poc)
 
         # District counts
         if district and district.lower() not in ['na', 'none', 'null', '0', '-']:
@@ -364,8 +378,22 @@ def parse_sheet_tab(xlsx_path: str, tab_name: str, max_records_for_ui: int = 500
         p['answer_rate'] = round((p['answered'] / p['total'] * 100), 1) if p['total'] > 0 else 0
     poc_list.sort(key=lambda x: x['total'], reverse=True)
 
-    # Sort dates chronologically
-    date_timeline = sorted(list(date_counts.values()), key=lambda x: x['date'])
+    # Sort dates chronologically with answer rates
+    date_timeline = []
+    for d_val, d_info in sorted(date_counts.items(), key=lambda x: x[0]):
+        t = d_info['total']
+        a = d_info['answered']
+        rate = round((a / t * 100), 1) if t > 0 else 0
+        date_timeline.append({
+            'date': d_val,
+            'total': t,
+            'answered': a,
+            'not_answered': d_info['not_answered'],
+            'answer_rate': rate,
+            'male': d_info['male'],
+            'female': d_info['female'],
+            'active_pocs': len(d_info['pocs'])
+        })
 
     # District top 15
     top_districts = sorted([{'district': k, 'count': v} for k, v in district_counts.items()], key=lambda x: x['count'], reverse=True)[:15]
